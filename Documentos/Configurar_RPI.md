@@ -40,5 +40,3 @@ Se recomienda una configuración similar a esta, sin embargo debe de poner su pr
 ![Warning](./imgs/Warning.png).
 
 9 - Una vez que termine el proceso, expulse la Tarjeta de SD de Windows para evitar que se corronpan los datos a la hora de extraerla. Extraigala e insertela en su dispositivo Raspberry PI mientras este se encuentre apagado, por último proceda e encenderlo.
-
-Este es el repositorio de la Máquina de café para el curso de Validación de Sistemas Embebidos TSEV-008 del programa de Técnico en Sistemas Embebidos de la Universidad Fidélitas.
