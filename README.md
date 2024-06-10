@@ -157,9 +157,9 @@ El **(.Fidelitas)** antes de **rscd27@raspberrypi** nos deja saber que estamos e
 
 ```
 (.Fidelitas) ~S deactivate
-
-7. Instale las siguientes bibliotecas.
 ```
+7. Instale las siguientes bibliotecas.
+
 
 ```
 (.Fidelitas) ~S python -m pip install scalene numpy
