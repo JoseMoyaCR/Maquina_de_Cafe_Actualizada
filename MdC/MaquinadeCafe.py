@@ -4,6 +4,7 @@
 class MaquinadeCafe:
 
     # Consutructor de Clase: Código que se ejecuta cuando se "crea" la máquina de cafe
+    # Método Incializar
     def __init__(self, nombre : str = "Máquina de Café", version__sistema: float = 1.0):
         self.nombre                     = nombre
         self.version_sistema           = version__sistema
@@ -25,6 +26,7 @@ class MaquinadeCafe:
         self._agua_taza                 = 250
         self._leche_por_taza            = 32
         self._chocolate_por_taza        = 32
+        self._temperatura_caldera       = 24 # Temperatura incial de la caldera es 24 grados celcius
         
 
 
@@ -34,7 +36,7 @@ class MaquinadeCafe:
 
 
     # Estado de Máquina de cafe
-    def estado(self,):
+    def verificar_reservas(self) -> dict:
         print("Reporte de estado de máquina de café: %s", self.nombre)
         print("------------------------------------------------------")
         print("Materia Prima disponible:")
@@ -42,28 +44,30 @@ class MaquinadeCafe:
         print("       - Leche disponble:        %d", self._recipiente_de_leche)
         print("       - Cafe disponble:         %d", self._recipiente_de_cafe)
         print("       - Chocolate disponble:    %d", self._recipiente_de_chocolate)
-        print("Cantidad de tazas procesadas:    %d",self._tazas_servidas)
+        print("Cantidad de tazas procesadas:    %d", self._tazas_servidas)
+        print("Temperatura de la caldera:       %d °C", self._temperatura_caldera)
+        return {"Agua disponble": self._tanque_de_agua, "Leche disponble": self._recipiente_de_leche, 
+                "Cafe disponible": self._recipiente_de_cafe, "Chocolate disponble": self._recipiente_de_chocolate, 
+                "Cantidad de tazas procesadas": self._tazas_servidas, "Temperatura de la caldera": self._temperatura_caldera}
 
     # Matenimiento de Máaquina para recarga de Materia Prima
-    def mantenimiento(self, agua : int = 0, leche : int = 0, cafe : int = 0, chocolate : int = 0):
+    def mantenimiento(self, agua : int = 0, leche : int = 0, cafe : int = 0, chocolate : int = 0) -> dict:
         self._tanque_de_agua            = agua
         self._recipiente_de_leche       = leche
         self._recipiente_de_cafe        = cafe
         self._recipiente_de_chocolate   = chocolate
-    
-    def check_agua(self, cantidad_de_agua_requerida : int):
-        if (cantidad_de_agua_requerida == 0 or cantidad_de_agua_requerida < 0):
-            print("Error - La cantidad de agua requerida no puede ser menor o igual que 0")
-            return -1
-        else:
-            print()
+        self._temperatura_caldera       = 24 #Se llena con agua a temperatura ambiente
+        return {"Code": 1, "Message": "Mantenimiento completo"}
 
     # Servir expresso
-    def expreso(self, cantidad : int = 1): # por defecto hace un expresso
-        print("Café Expreso Solicitado -> Cantidad de tazas: %d", cantidad)
+    def expreso(self, tamano : int = 0) -> dict:
+        
+        if tamano not in range(0,3):
+            return {"Code": -1, "Message": "Error Tamaño Incorrecto"}
+        
         agua_necesaria = self._agua_por_expreso * cantidad
         cafe_necesario = self._cafe_por_expreso *cantidad
-        # El expreso usa 18 g de café y 250 ml de agua
+        # El expreso usa 18 g de café y 40 ml de agua
         if ((self._tanque_de_agua >= agua_necesaria) and (self._recipiente_de_cafe >= cafe_necesario)):
             print("Hay suficiente agua y café para la preparación. Comenzando preparación por favor espere...")
             self._tanque_de_agua       -= agua_necesaria
@@ -82,7 +86,7 @@ class MaquinadeCafe:
                       La cantidad de agua permitiría preparar %d", expresos_disponibles)
             return -1
         
-    # Servir expresso
+    # Servir cafe con leche
     def cafe_con_leche(self, cantidad : int = 1): # por defecto hace un expresso
         print("Café con Leche Solicitado -> Cantidad de tazas: %d", cantidad)
         agua_necesaria = self._agua_taza * cantidad
@@ -106,11 +110,9 @@ class MaquinadeCafe:
                 expressos_disponibles = int(self._recipiente_de_cafe / 18)
                 print("No Hay suficiente Agua para la preparación. Por favor recargue el sistema o solicite una cantidad menor de tazas. \
                       La cantidad de agua permitiría preparar %d", expresos_disponibles)
-           if (self._recipiente_de_leche < leche_necesaria):
+            if (self._recipiente_de_leche < leche_necesaria):
                 expressos_disponibles = int(self._recipiente_de_cafe / 18)
                 print("No Hay suficiente Agua para la preparación. Por favor recargue el sistema o solicite una cantidad menor de tazas. \
                       La cantidad de agua permitiría preparar %d", expresos_disponibles) 
-            return -1
+                return -1
 
-p1 = MaquinadeCafe("John", 1.2)
-p1.myfunc()
