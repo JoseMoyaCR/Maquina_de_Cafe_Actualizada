@@ -2,6 +2,12 @@
 from time import sleep
 from recetas import recetas
 
+import os
+import json
+from datetime import datetime
+
+import csv
+
 # Declaración de la Clase Máquina de Cafe
 class MaquinadeCafe:
 
@@ -11,9 +17,9 @@ class MaquinadeCafe:
         self.nombre                     = nombre
         self.version_sistema            = version__sistema
         self._tanque_de_agua            = 10000 # mililitros de agua
-        self._recipiente_de_leche       = 4000  # gramos de leche en polvo
-        self._recipiente_de_cafe        = 6000  # gramos de café
-        self._recipiente_de_chocolate   = 4000  # gramos de chocolate
+        self._recipiente_de_leche       = 2500  # gramos de leche en polvo
+        self._recipiente_de_cafe        = 5000  # gramos de café
+        self._recipiente_de_chocolate   = 2500  # gramos de chocolate
         self._tazas_servidas            = 0     # cantidad de tazas procesadas
 
         # Variables Internas
@@ -22,6 +28,9 @@ class MaquinadeCafe:
 
         # Recetas
         self.bebidas                    = recetas
+        
+        # Reporte de bebidas
+        self.reporte_bebidas = []
         
     # Destructor de Clase: Código que se ejecuta cuando se "apaga" la máquinada de café
     def __del__(self,):
@@ -60,7 +69,7 @@ class MaquinadeCafe:
             return {"Code": 0, "Message": "La Máquina ya está encendida", "Tiempo_Proceso" : 0}
 
     def _inicializar_caldera(self):
-        self._temperatura_caldera = 98
+        self._temperatura_caldera = 95
 
     # Estado de Máquina de cafe
     def estado(self) -> dict:
@@ -81,6 +90,7 @@ class MaquinadeCafe:
 
     # Matenimiento de Máaquina para recarga de Materia Prima
     def mantenimiento(self, agua : int = 0, leche : int = 0, cafe : int = 0, chocolate : int = 0) -> dict:
+        self.registrar_mantenimiento(agua, leche, cafe, chocolate)  # Guardar valores previos y nuevos
         self._tanque_de_agua            = agua
         self._recipiente_de_leche       = leche
         self._recipiente_de_cafe        = cafe
@@ -88,12 +98,21 @@ class MaquinadeCafe:
         self._temperatura_caldera       = 24 #Se llena con agua a temperatura ambiente
         return {"Code": 1, "Message": "Mantenimiento completo"}
     
-    def preparar_bebida(self, receta):
+    def preparar_bebida(self, receta, bebida: str, tamano):
         # Actualizar reservas si todo está bien
         actualizacion = self.actualizar_reservas(receta)
         if actualizacion["Code"] == -1:
             return actualizacion
-
+            
+        if bebida == "Expreso":
+            if tamano == 0:  # Expreso simple
+                tamano = "simple"
+            elif tamano == 1:  # Expreso doble
+                tamano = "doble"
+        else:
+            tamano = str(tamano) + "oz"
+                
+        self.registrar_bebida(bebida, tamano)
         # Retornar éxito al preparar la bebida
         return {"Code": 1, "Message": "Bebida preparada exitosamente"}
     
@@ -131,3 +150,142 @@ class MaquinadeCafe:
         self._recipiente_de_chocolate -= receta.get("chocolate_g", 0)
 
         return {"Code": 1, "Message": "Reservas actualizadas \n correctamente"}
+        
+    def rutina_autodiagnostico(self):
+        reporte = {
+            "Agua": "OK" if 0 <= self._tanque_de_agua <= 10000 else "FALLA",
+            "Leche": "OK" if 0 <= self._recipiente_de_leche <= 2500 else "FALLA",
+            "Cafe": "OK" if 0 <= self._recipiente_de_cafe <= 5000 else "FALLA",
+            "Chocolate": "OK" if 0 <= self._recipiente_de_chocolate <= 2500 else "FALLA",
+            "Temperatura Caldera": "OK" if 0 <= self._temperatura_caldera <= 110 else "FALLA",
+        }
+
+        estado_general = "OK"
+        # Revisar si existe alguna falla
+        for sensor, estado in reporte.items():
+            if estado == "FALLA":
+                estado_general = "FALLA"
+                break
+
+        reporte_final = {
+            "Estado General": estado_general,
+            "Detalles": reporte
+        }
+        
+        return reporte_final
+
+    def generar_reporte_sistema(self):
+        reporte_diagnostico = self.rutina_autodiagnostico()
+        
+        reporte_final = {
+            "Estado General": reporte_diagnostico["Estado General"],
+            "Detalles": reporte_diagnostico["Detalles"],
+            "Cantidad de Materia Prima": {
+                "Agua (ml)": self._tanque_de_agua,
+                "Leche (g)": self._recipiente_de_leche,
+                "Cafe (g)": self._recipiente_de_cafe,
+                "Chocolate (g)": self._recipiente_de_chocolate
+            },
+            "Bebidas Procesadas": self._tazas_servidas
+        }
+        return reporte_final
+
+    def guardar_reporte(self):
+        # Crear carpeta 'logs' si no existe
+        if not os.path.exists("logs"):
+            os.makedirs("logs")
+
+        # Generar reporte
+        reporte = {
+            "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Reporte": self.generar_reporte_sistema()
+        }
+
+        # Guardar reporte como JSON en la carpeta 'logs'
+        nombre_archivo = f"logs/reporte_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        with open(nombre_archivo, "w") as file:
+            json.dump(reporte, file, indent=4)
+
+        return {"Code": 1, "Message": f"Reporte guardado en: {nombre_archivo}"}
+        
+    def registrar_bebida(self, bebida: str, tamano):
+        hora_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.reporte_bebidas.append({"Hora": hora_actual, "Bebida": bebida + " " + str(tamano)})
+        self.guardar_reporte_bebidas()
+
+    def guardar_reporte_bebidas(self, nombre_archivo="reporte_bebidas.csv"):
+        with open(nombre_archivo, mode="w", newline="") as archivo_csv:
+            campos = ["Hora", "Bebida"]
+            escritor = csv.DictWriter(archivo_csv, fieldnames=campos)
+            escritor.writeheader()
+            escritor.writerows(self.reporte_bebidas)
+            
+    def registrar_mantenimiento(self, agua : int = 0, leche : int = 0, cafe : int = 0, chocolate : int = 0):
+        # Ruta y nombre del archivo
+        ruta_reporte = "reporte_mantenimiento.csv"
+        # Obtener la fecha y hora actual
+        fecha_hora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # Crear el registro con valores previos
+        registro = {
+            "Fecha y Hora"            : fecha_hora,
+            "Agua Antes (ml)"         : self._tanque_de_agua,
+            "Leche Antes (g)"         : self._recipiente_de_leche,
+            "Cafe Antes (g)"          : self._recipiente_de_cafe,
+            "Chocolate Antes (g)"     : self._recipiente_de_chocolate,
+            "Temp Caldera Antes (C)"  : self._temperatura_caldera,
+            "Agua Despues (ml)"       : agua,  # Nuevos valores
+            "Leche Despues (g)"       : leche,
+            "Cafe Despues (g)"        : cafe,
+            "Chocolate Despues (g)"   : chocolate,
+            "Temp Caldera Despues (C)": 24
+        }
+
+        # Verificar si el archivo existe
+        archivo_nuevo = not os.path.exists(ruta_reporte)
+
+        # Guardar el registro en el archivo CSV
+        with open(ruta_reporte, mode="a", newline="") as file:
+            escritor = csv.DictWriter(file, fieldnames=registro.keys())
+
+            # Escribir el encabezado si el archivo es nuevo
+            if archivo_nuevo:
+                escritor.writeheader()
+
+            escritor.writerow(registro)
+
+        print(f"Evento de mantenimiento registrado en {ruta_reporte}.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

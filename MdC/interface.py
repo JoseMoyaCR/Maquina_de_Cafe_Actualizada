@@ -221,7 +221,7 @@ class InterfazUsuario:
                 self.update_display(f"Has seleccionado: {button_name}")
                 self.update_leds()
 
-                # Preparación automática si es Expreso o Doble expreso
+            # Preparación automática si es Expreso o Doble expreso
             if button_name in ["Expreso", "Doble expreso"]:
                 self.update_leds()
                 tamano = 0 if button_name == "Expreso" else 1  # 0 para Expreso, 1 para Doble expreso
@@ -230,7 +230,7 @@ class InterfazUsuario:
                     self.update_display(self.receta["error"])
                 if self.McD.verificar_reservas(self.receta)["Code"]:
                     self.mostrar_progreso(f"Preparando {button_name}", 5000)  # Simula 5 segundos de progreso
-                    resultado = self.McD.preparar_bebida(self.receta)
+                    resultado = self.McD.preparar_bebida(self.receta, "Expreso", tamano)
                     self.update_display(resultado["Message"])
                     self.receta = None
                     self.bebida_seleccionada = None
@@ -247,11 +247,12 @@ class InterfazUsuario:
                 )
             elif button_name == "Reporte":
                 reporte_imprimir = self.McD.mostrar_reporte()
-                self.update_display(reporte_imprimir)
+                resultado = self.McD.guardar_reporte()
+                self.update_display(reporte_imprimir + f"\n" + resultado["Message"])
             elif button_name == "Mantenimiento":
                 self.mostrar_progreso("Realizando mantenimiento", 7000)  # Simula 7 segundos de progreso
                 resultado = self.McD.mantenimiento(
-                    agua=10000, leche=4000, cafe=6000, chocolate=4000
+                    agua=10000, leche=2500, cafe=5000, chocolate=2500
                 )
                 self.update_display(resultado["Message"])
             elif button_name == "Apagar":
@@ -266,7 +267,7 @@ class InterfazUsuario:
             self.receta = self.McD.obtener_receta(self.bebida_seleccionada, self.tamano_seleccionado)
             if self.McD.verificar_reservas(self.receta)["Code"]:
                 self.mostrar_progreso(f"Preparando {self.bebida_seleccionada} de \n {self.tamano_seleccionado} oz", 5000)  # Simula 5 segundos de preparación
-                resultado = self.McD.preparar_bebida(self.receta)
+                resultado = self.McD.preparar_bebida(self.receta, self.bebida_seleccionada, self.tamano_seleccionado)
                 self.update_display(resultado["Message"])
 
                 # Reiniciar variables después de preparar la bebida

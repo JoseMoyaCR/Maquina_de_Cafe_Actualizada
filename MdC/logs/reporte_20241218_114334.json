@@ -1,0 +1,20 @@
+{
+    "Fecha": "2024-12-18 11:43:34",
+    "Reporte": {
+        "Estado General": "OK",
+        "Detalles": {
+            "Agua": "OK",
+            "Leche": "OK",
+            "Cafe": "OK",
+            "Chocolate": "OK",
+            "Temperatura Caldera": "OK"
+        },
+        "Cantidad de Materia Prima": {
+            "Agua (ml)": 9024,
+            "Leche (g)": 2460,
+            "Cafe (g)": 4965,
+            "Chocolate (g)": 2460
+        },
+        "Bebidas Procesadas": 0
+    }
+}
